@@ -14,7 +14,7 @@ public class UniqueAccessCodeDTO {
     NOT_FOUND
   }
 
-  private String uac;
+  private String uacHash;
   private boolean active;
   private CaseStatus caseStatus;
   private String questionnaireId;

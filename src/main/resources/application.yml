@@ -13,12 +13,12 @@ logging:
     uk.gov.ons.ctp: INFO
     org.springframework: INFO
   profile: DEV
-  useJson: false
+  useJson: true
 
 management:
   health:
     rabbit:
-      enabled: true 
+      enabled: false 
   endpoints:
     enabled-by-default: true
     web:
@@ -33,6 +33,51 @@ management:
       enabled: true 
     defaults:
       enabled: true
+  endpoint:
+    auditevents:
+      enabled: false
+    beans:
+      enabled: false
+    caches:
+      enabled: false
+    conditions:
+      enabled: false
+    configprops:
+      enabled: false
+    env:
+      enabled: false
+    flyway:
+      enabled: false
+    health:
+      enabled: false
+    httptrace:
+      enabled: false
+    integrationgraph:
+      enabled: false
+    loggers:
+      enabled: false
+    liquibase:
+      enabled: false
+    metrics:
+      enabled: false
+    mappings:
+      enabled: false
+    scheduledtasks:
+      enabled: false
+    sessions:
+      enabled: false
+    shutdown:
+      enabled: false
+    threaddump:
+      enabled: false
+    heapdump:
+      enabled: false
+    jolokia:
+      enabled: false
+    logfile:
+      enabled: false
+    prometheus:
+      enabled: false
 
 server:
   port: 8071
@@ -70,17 +115,13 @@ queueconfig:
   response-authentication-routing-key: event.response.authentication
 
 messaging:
+  mismatchedQueuesFatal: true
   backoffInitial: 5000
   backoffMultiplier: 3
   backoffMax: 45000
   consumingThreads: 1
-  pubMaxAttempts: 3
   conMaxAttempts: 3
   prefetchCount: 1
-  txSize: 1
-
-report-settings:
-  cron-expression: "0 * * * * *"
 
 swagger-settings:
   swagger-ui-active: true
@@ -88,10 +129,6 @@ swagger-settings:
   title: RespondentHomeService
   description: API for ${project.artifactId}
   version: ${project.version}
-
-retries:
-  maxAttempts: 3
-  backoff: 5000
 
 googleStorage:
   caseSchemaName: case

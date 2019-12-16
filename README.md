@@ -2,9 +2,9 @@
 [![Build Status](https://concourse.census-gcp.onsdigital.uk/api/v1/teams/int/pipelines/respondent-home/jobs/rhsvc-build/badge)](https://concourse.census-gcp.onsdigital.uk/teams/int/pipelines/respondent-home/jobs/rhui-build)
 [![codecov](https://codecov.io/gh/ONSdigital/census-rh-service/branch/master/graph/badge.svg)](https://codecov.io/gh/ONSdigital/census-rh-service)
 
-
 # Respondent Home Data Service
 This repository contains the Respondent Data service. This microservice is a RESTful web service implemented using [Spring Boot](http://projects.spring.io/spring-boot/). It manages respondent data, where a Respondent Data object represents an expected response from the Respondent Data service, which provides all the data that is required by Respondent Home in order for it to verify the respondent's UAC code and connect them to the relevant EQ questionnaire.
+
 
 ## Set Up
 Do the following steps to set up the code to run locally:
@@ -82,17 +82,26 @@ To manually test RH:
 
 1) **Queue setup**
  
-In the RabbitMQ console make sure that the following queues have been created and bound to the 'events' exchange:
+In the RabbitMQ console make sure that the following queues have been created and bound:
 
-      Routing key                    | Destination queue
-    ---------------------------------+--------------------------------
-      event.case.update              | case.rh.case
-      event.uac.update               | case.rh.uac
-      event.response.authentication  | event.response.authentication
+      Exchange  |  Routing key                    | Destination queue
+    ------------+---------------------------------+--------------------------------
+       events   |  event.case.update              | case.rh.case
+       events   |  event.uac.update               | case.rh.uac
+       events   |  event.response.authentication  | event.response.authentication
+       events   |  event.website.feedback         | website.feedback
+
+The following dead letter queues should be configured:
+
+      Exchange                      | Routing key                    | Destination queue
+    --------------------------------+--------------------------------+---------------------
+       events.deadletter.exchange   | event.case.update              | case.rh.case.dlq
+       events.deadletter.exchange   | event.uac.update               | case.rh.uac.dlq
+
 
 2) **UAC Data**
 
-Submit the UAC data by sending the following to the 'events' exchange with the routing key 'event.uac.updates':
+Submit the UAC data by sending the following to the 'events' exchange with the routing key 'event.uac.update':
 
 	{
 	  "event": {
@@ -165,9 +174,7 @@ Submit the case by sending the following to the 'events' exchange with the routi
 
 If you know the case id which matches the stored UAC hash then you can supply it in the UACS get request:
   
-       $ curl -s -H "Content-Type: application/json" "http://localhost:8071/uacs/w4nwwpphjjptp7fn"
- 
-If the case id is not known for the loaded UAC data then you can manually force execution through by running in the debugger and set a breakpoint in UniqueAccessCodeServiceImpl::getSha256Hash(), and then manually replacing the calculated SHA256 value with the uacHash value of an already loaded UAC.
+       $ curl -s -H "Content-Type: application/json" "http://localhost:8071/uacs/8a9d5db4bbee34fd16e40aa2aaae52cfbdf1842559023614c30edb480ec252b4"
 
 To calculate the sha256 value for a uac:
 
@@ -230,7 +237,7 @@ This example uses a case uuid of: f868fcfc-7280-40ea-ab01-b173ac245da3
         ]
     }
     EOF
-
+    
     # Create case updated payload
     cat > /tmp/case_updated.json <<EOF 
     {
@@ -245,16 +252,27 @@ This example uses a case uuid of: f868fcfc-7280-40ea-ab01-b173ac245da3
     }
     EOF
 
+    #Prepare outbound queue
+    http --auth generator:hitmeup GET http://localhost:8171/rabbit/create/SURVEY_LAUNCHED
+    http --auth generator:hitmeup GET http://localhost:8171/rabbit/flush/event.response.authentication
+
     # Use the generator to create the UAC and case objects in Firestore
     http --auth generator:hitmeup POST "http://localhost:8171/generate" @/tmp/uac_updated.json
     http --auth generator:hitmeup POST "http://localhost:8171/generate" @/tmp/case_updated.json
 
     # Wait until UAC and case have been loaded into Firestore
-    http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=uac&key=147eb9dcde0e090429c01dbf634fd9b69a7f141f005c387a9c00498908499dde&timeout=500ms"
-    http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-b173ac245da3&timeout=500ms"
+    http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=uac&key=147eb9dcde0e090429c01dbf634fd9b69a7f141f005c387a9c00498908499dde&timeout=1s"
+    http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-b173ac245da3&timeout=1s"
 
     # Make the UAC authenticated request
-    http --auth serco_cks:temporary get "http://localhost:8071/uacs/aaaabbbbccccdddd"
+    http --auth serco_cks:temporary get "http://localhost:8071/uacs/147eb9dcde0e090429c01dbf634fd9b69a7f141f005c387a9c00498908499dde"
+
+    # Grab respondent authenticated event
+    http --auth generator:hitmeup GET "http://localhost:8171/rabbit/get/event.response.authentication?timeout=500ms"
+    
+    # Nicely close down rabbit connection (Probably not required)
+    http --auth generator:hitmeup GET "http://localhost:8171/rabbit/close"
+    
 
 
 ## Docker image build
