@@ -31,15 +31,6 @@ management:
       enabled: true 
     health:
       enabled: true
-  metrics:
-    tags:
-      application: RespondentHomeService
-      pod: ${HOSTNAME}
-    export:
-      stackdriver:
-        project-id: ${GOOGLE_CLOUD_PROJECT}
-        enabled: true
-        step: PT2M
 
 server:
   port: 8071

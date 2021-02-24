@@ -3,12 +3,6 @@ package uk.gov.ons.ctp.integration.rhsvc;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import com.godaddy.logging.LoggingConfigs;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.config.MeterFilter;
-import io.micrometer.core.instrument.config.MeterFilterReply;
-import io.micrometer.stackdriver.StackdriverConfig;
-import io.micrometer.stackdriver.StackdriverMeterRegistry;
-import java.time.Duration;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +52,7 @@ import uk.gov.service.notify.NotificationClientApi;
 public class RHSvcApplication {
   private static final Logger log = LoggerFactory.getLogger(RHSvcApplication.class);
 
+  /*
   @Value("${management.metrics.export.stackdriver.project-id}")
   private String stackdriverProjectId;
 
@@ -66,6 +61,7 @@ public class RHSvcApplication {
 
   @Value("${management.metrics.export.stackdriver.step}")
   private String stackdriverStep;
+  */
 
   @Autowired private AppConfig appConfig;
 
@@ -174,6 +170,8 @@ public class RHSvcApplication {
     }
   }
 
+  /*
+
   @Bean
   StackdriverConfig stackdriverConfig() {
     return new StackdriverConfig() {
@@ -223,6 +221,8 @@ public class RHSvcApplication {
     StackdriverMeterRegistry.builder(stackdriverConfig).build();
     return StackdriverMeterRegistry.builder(stackdriverConfig).build();
   }
+
+  */
 
   @Bean
   public NotificationClientApi notificationClient() {

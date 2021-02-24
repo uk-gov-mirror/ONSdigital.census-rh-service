@@ -2,7 +2,6 @@ package uk.gov.ons.ctp.integration.rhsvc.endpoint;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import io.micrometer.core.annotation.Timed;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-@Timed
 @RestController
 @RequestMapping(value = "/exp", produces = "application/json")
 public class ExperimentalEndpoint {
